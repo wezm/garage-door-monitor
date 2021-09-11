@@ -3,7 +3,9 @@ use std::sync::{mpsc, Arc};
 use std::time::{Duration, Instant};
 use std::{io, thread};
 
+use json::object;
 use rppal::gpio::{Gpio, InputPin, OutputPin};
+use tiny_http::{Response, Server};
 
 use garage_door_monitor::{led, AtomicDoorState, DoorState};
 
@@ -54,6 +56,8 @@ fn main() -> Result<(), io::Error> {
             eprintln!("GPIO thread exiting");
         });
         threads.push(thread);
+    } else {
+        eprintln!("unable to set up GPIO")
     }
 
     // Notification thread
@@ -70,17 +74,42 @@ fn main() -> Result<(), io::Error> {
         threads.push(thread);
     }
 
-    // HTTP server thread
+    // HTTP server shutdown thread
+    let server = Arc::new(Server::http("0.0.0.0:8088").unwrap()); // FIXME: unwrap
     {
         let term = Arc::clone(&term);
+        let server = Arc::clone(&server);
         let thread = thread::spawn(move || {
             while !term.load(Ordering::Relaxed) {
-                // This needs to know the current state
                 std::thread::sleep(ONE_SECOND);
             }
+            server.unblock();
             eprintln!("server thread exiting");
         });
         threads.push(thread);
+    }
+
+    // HTTP server
+    let json = "Content-type: application/json; charset=utf-8"
+        .parse::<tiny_http::Header>()
+        .unwrap();
+    eprintln!("server ready and waiting");
+    for request in server.incoming_requests() {
+        let response = match request.url() {
+            "/" => Response::from_string(door_state.get_state().to_string()),
+            "/door.json" => {
+                let obj = object! {
+                    state: door_state.get_state().to_string(),
+                    notified_at: null,
+                    open_since: null
+                };
+                let body = json::stringify_pretty(obj, 2);
+                Response::from_string(body).with_header(json.clone())
+            }
+            _ => Response::from_string("Not found").with_status_code(404),
+        };
+
+        request.respond(response).unwrap(); // FIXME: unwrap
     }
 
     for thread in threads {

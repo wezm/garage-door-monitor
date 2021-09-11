@@ -1,6 +1,8 @@
-use rppal::gpio::Level;
+use std::fmt;
 use std::sync::atomic::{AtomicU8, Ordering};
 use std::sync::Arc;
+
+use rppal::gpio::Level;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 pub enum DoorState {
@@ -61,5 +63,15 @@ impl AtomicDoorState {
 
     pub fn set_state(&self, state: DoorState) {
         self.flag.store(state as u8, Ordering::SeqCst)
+    }
+}
+
+impl fmt::Display for DoorState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DoorState::Open => f.write_str("Open"),
+            DoorState::Closed => f.write_str("Closed"),
+            DoorState::Unknown => f.write_str("Unknown"),
+        }
     }
 }
