@@ -1,0 +1,5 @@
+#!/bin/sh
+
+export PATH="$HOME/Source/buildroot-2021.08/output/host/bin:$PATH"
+
+cargo build --target arm-unknown-linux-musleabihf

@@ -1,2 +1,2 @@
-[build]
-target = "arm-unknown-linux-musleabihf" # Raspberry Pi Zero
+[target.arm-unknown-linux-musleabihf]
+linker = "arm-buildroot-linux-musleabihf-gcc"
