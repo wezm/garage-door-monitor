@@ -1,3 +1,4 @@
+pub mod alert;
 mod door_state;
 pub mod led;
 

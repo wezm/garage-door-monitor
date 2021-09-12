@@ -55,6 +55,7 @@ dependencies = [
  "json",
  "rppal",
  "signal-hook",
+ "timeago",
  "tiny_http",
 ]
 
@@ -155,6 +156,12 @@ checksum = "e51e73328dc4ac0c7ccbda3a494dfa03df1de2f46018127f60c693f2648455b0"
 dependencies = [
  "libc",
 ]
+
+[[package]]
+name = "timeago"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47de24922dcc88a06d4d9e442aa5d75042e6b35d8cabb17a72de636cb41f8768"
 
 [[package]]
 name = "tiny_http"

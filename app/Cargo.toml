@@ -9,4 +9,5 @@ edition = "2018"
 json = "0.12.4"
 rppal = "0.12.0"
 signal-hook = "0.3.10"
+timeago = { version = "0.3.0", default-features = false }
 tiny_http = "0.8"
