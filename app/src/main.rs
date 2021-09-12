@@ -99,9 +99,24 @@ fn main() -> Result<(), io::Error> {
     // Notification thread
     {
         let term = Arc::clone(&term);
+        let state = Arc::clone(&state);
         let thread = thread::spawn(move || {
             while !term.load(Ordering::Relaxed) {
-                std::thread::sleep(ONE_SECOND);
+                // I don't want to hold the lock while the notification is sent. If it's slow
+                // then it will block other things from happening, however there could be a
+                // read-modify-write case if the state is updated while the notification is
+                // sent. Since we clear notified_at when detecting and opening this is ok.
+                let current_state = { *state.read().unwrap() };
+                let maybe_sent = current_state.open_since.and_then(|open_since| {
+                    alert::maybe_send(open_since, current_state.notified_at)
+                });
+                if maybe_sent.is_some() {
+                    // notification was sent, update state
+                    let mut current_state = state.write().unwrap();
+                    current_state.notified_at = maybe_sent
+                }
+
+                std::thread::sleep(5 * ONE_SECOND);
             }
             eprintln!("notification thread exiting");
         });
@@ -115,7 +130,7 @@ fn main() -> Result<(), io::Error> {
         let server = Arc::clone(&server);
         let thread = thread::spawn(move || {
             while !term.load(Ordering::Relaxed) {
-                std::thread::sleep(ONE_SECOND);
+                std::thread::sleep(5 * ONE_SECOND);
             }
             server.unblock();
             eprintln!("server thread exiting");

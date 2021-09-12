@@ -2,4 +2,8 @@
 
 export PATH="$HOME/Source/buildroot-2021.08/output/host/bin:$PATH"
 
+# For the ring crate
+export CC_arm_unknown_linux_musleabihf="arm-buildroot-linux-musleabihf-gcc" \
+       AR_arm_unknown_linux_musleabihf="arm-buildroot-linux-musleabihf-ar"
+
 cargo build --target arm-unknown-linux-musleabihf
