@@ -12,6 +12,7 @@ use garage_door_monitor::{led, AtomicDoorState, DoorState};
 const DOOR_PIN: u8 = 20; // header pin 38
 const LED_PIN: u8 = 21; // header pin 40
 const ONE_SECOND: Duration = Duration::from_secs(1);
+const HTML: &str = include_str!("home.html");
 
 fn main() -> Result<(), io::Error> {
     let term = Arc::new(AtomicBool::new(false));
@@ -21,7 +22,7 @@ fn main() -> Result<(), io::Error> {
     let (tx, rx) = mpsc::channel();
     let door_state = AtomicDoorState::new(DoorState::Unknown);
     let pins = setup_gpio();
-    let mut threads = Vec::with_capacity(2);
+    let mut threads = Vec::with_capacity(3);
 
     // GPIO thread
     // The GPIO thread is only spawned if we were able to acquire the pins
@@ -45,8 +46,8 @@ fn main() -> Result<(), io::Error> {
                 }
 
                 match state {
-                    DoorState::Open => led::flash(&mut led, 1),
-                    DoorState::Closed => led::flash(&mut led, 2),
+                    DoorState::Closed => led::flash(&mut led, 1),
+                    DoorState::Open => led::flash(&mut led, 2),
                     DoorState::Unknown => led::flash(&mut led, 3),
                 }
 
@@ -93,10 +94,23 @@ fn main() -> Result<(), io::Error> {
     let json = "Content-type: application/json; charset=utf-8"
         .parse::<tiny_http::Header>()
         .unwrap();
+    let html_content = "Content-type: text/html; charset=utf-8"
+        .parse::<tiny_http::Header>()
+        .unwrap();
     eprintln!("server ready and waiting");
     for request in server.incoming_requests() {
         let response = match request.url() {
-            "/" => Response::from_string(door_state.get_state().to_string()),
+            "/" => {
+                let status = match door_state.get_state() {
+                    DoorState::Open => {
+                        String::from("🔴 Open for [insert mins here]")
+                    },
+                    DoorState::Closed => String::from("🟢 Closed"),
+                    DoorState::Unknown => String::from("🔵 Unknown"),
+                };
+                let html = HTML.replace("$doorstate$", &status);
+                Response::from_string(html).with_header(html_content.clone())
+            },
             "/door.json" => {
                 let obj = object! {
                     state: door_state.get_state().to_string(),
