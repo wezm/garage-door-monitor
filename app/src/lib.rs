@@ -5,7 +5,7 @@ pub mod led;
 
 use std::time::Instant;
 
-pub use door_state::{AtomicDoorState, DoorState};
+pub use door_state::{DoorState};
 
 #[derive(Copy, Clone, PartialEq, Eq)]
 pub struct State {

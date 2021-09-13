@@ -1,6 +1,4 @@
 use std::fmt;
-use std::sync::atomic::{AtomicU8, Ordering};
-use std::sync::Arc;
 
 use rppal::gpio::Level;
 
@@ -29,40 +27,6 @@ impl From<Level> for DoorState {
             Level::Low => DoorState::Open,
             Level::High => DoorState::Closed,
         }
-    }
-}
-
-#[derive(Clone)]
-pub struct AtomicDoorState {
-    flag: Arc<AtomicU8>,
-}
-
-impl AtomicDoorState {
-    pub fn new(state: DoorState) -> Self {
-        AtomicDoorState {
-            flag: Arc::new(AtomicU8::new(state as u8)),
-        }
-    }
-
-    pub fn open(&self) {
-        self.set_state(DoorState::Open)
-    }
-
-    pub fn closed(&self) {
-        self.set_state(DoorState::Closed)
-    }
-
-    pub fn unknown(&self) {
-        self.set_state(DoorState::Unknown)
-    }
-
-    #[inline]
-    pub fn get_state(&self) -> DoorState {
-        self.flag.load(Ordering::SeqCst).into()
-    }
-
-    pub fn set_state(&self, state: DoorState) {
-        self.flag.store(state as u8, Ordering::SeqCst)
     }
 }
 
