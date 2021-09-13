@@ -129,22 +129,22 @@ fn main() -> Result<(), io::Error> {
     };
     eprintln!("http server running on {}:{}", SERVER_ADDR.0, SERVER_ADDR.1);
 
-    // HTTP server shutdown thread
+    // Handle HTTP requests
     {
-        let term = Arc::clone(&term);
+        let state = Arc::clone(&state);
         let server = Arc::clone(&server);
         let thread = thread::spawn(move || {
-            while !term.load(Ordering::Relaxed) {
-                std::thread::sleep(5 * ONE_SECOND);
-            }
-            server.shutdown();
+            server.handle_requests(state);
             eprintln!("server thread exiting");
         });
         threads.push(thread);
     }
 
-    // Handle HTTP requests
-    server.handle_requests(state);
+    // Wait for signals to exit
+    while !term.load(Ordering::Relaxed) {
+        std::thread::sleep(5 * ONE_SECOND);
+    }
+    server.shutdown();
 
     for thread in threads {
         let _ = thread.join();
