@@ -11,6 +11,18 @@ use crate::{DoorState, State};
 
 const HTML: &str = include_str!("home.html");
 
+macro_rules! check_read {
+    ($expr:expr) => {
+        match $expr {
+            std::result::Result::Ok(state) => state,
+            std::result::Result::Err(err) => {
+                eprintln!("error reading state: {}", err);
+                return;
+            }
+        }
+    };
+}
+
 pub struct Server(tiny_http::Server);
 
 impl Server {
@@ -22,6 +34,7 @@ impl Server {
     }
 
     pub fn handle_requests(&self, state: Arc<RwLock<State>>) {
+        // NOTE(unwrap): These are known valid
         let json = "Content-type: application/json; charset=utf-8"
             .parse::<tiny_http::Header>()
             .unwrap();
@@ -31,7 +44,7 @@ impl Server {
         for request in self.0.incoming_requests() {
             let response = match request.url() {
                 "/" => {
-                    let current_state = { *state.read().unwrap() };
+                    let current_state = check_read!(state.read());
                     let status = match current_state.door_state {
                         DoorState::Open => {
                             let duration = current_state
@@ -53,7 +66,7 @@ impl Server {
                 }
                 "/door.json" => {
                     let now = Instant::now();
-                    let current_state = state.read().unwrap();
+                    let current_state = check_read!(state.read());
                     let obj = object! {
                         state: current_state.door_state.to_string(),
                         secs_since_notified: current_state.notified_at.map(|notified| now.duration_since(notified).as_secs()),

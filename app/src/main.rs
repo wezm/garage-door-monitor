@@ -5,7 +5,7 @@ use std::{io, process, thread};
 
 use rppal::gpio::{Gpio, InputPin, OutputPin};
 
-use garage_door_monitor::{alert, http, led, DoorState, State};
+use garage_door_monitor::{alert, http, led, term_on_err, DoorState, State};
 
 const DOOR_PIN: u8 = 20; // header pin 38
 const LED_PIN: u8 = 21; // header pin 40
@@ -14,8 +14,8 @@ const SERVER_ADDR: (&str, u16) = ("0.0.0.0", 8888);
 
 fn main() -> Result<(), io::Error> {
     let term = Arc::new(AtomicBool::new(false));
-    signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&term)).map(|_| ())?;
-    signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term)).map(|_| ())?;
+    signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&term))?;
+    signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term))?;
 
     let (tx, rx) = mpsc::channel();
     let state = Arc::new(RwLock::new(State {
@@ -35,7 +35,7 @@ fn main() -> Result<(), io::Error> {
             let thread = thread::spawn(move || {
                 while !term.load(Ordering::Relaxed) {
                     let door_state = door.read().into();
-                    tx.send(door_state).expect("send error"); // TODO: Work out how to handle this best
+                    term_on_err!(tx.send(door_state), &term);
 
                     match door_state {
                         DoorState::Closed => led::flash(&mut led, 1),
@@ -60,7 +60,7 @@ fn main() -> Result<(), io::Error> {
         let thread = thread::spawn(move || {
             while !term.load(Ordering::Relaxed) {
                 if let Ok(door_state) = rx.recv_timeout(ONE_SECOND) {
-                    let current_state = { *state.read().unwrap() };
+                    let current_state = { *term_on_err!(state.read(), &term) };
                     let new_state = match (door_state, current_state.open_since) {
                         // Closed to open transition
                         (DoorState::Open, None) => State {
@@ -80,7 +80,7 @@ fn main() -> Result<(), io::Error> {
                         },
                     };
                     if new_state != current_state {
-                        *state.write().unwrap() = new_state;
+                        *term_on_err!(state.write(), &term) = new_state;
                     }
                 }
             }
@@ -99,13 +99,13 @@ fn main() -> Result<(), io::Error> {
                 // then it will block other things from happening, however there could be a
                 // read-modify-write case if the state is updated while the notification is
                 // sent. Since we clear notified_at when detecting and opening this is ok.
-                let current_state = { *state.read().unwrap() };
+                let current_state = { *term_on_err!(state.read(), &term) };
                 let maybe_sent = current_state.open_since.and_then(|open_since| {
                     alert::maybe_send(open_since, current_state.notified_at)
                 });
                 if maybe_sent.is_some() {
                     // notification was sent, update state
-                    let mut current_state = state.write().unwrap();
+                    let mut current_state = term_on_err!(state.write(), &term);
                     current_state.notified_at = maybe_sent
                 }
 
