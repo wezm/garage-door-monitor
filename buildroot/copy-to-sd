@@ -1,7 +1,0 @@
-#!/bin/sh
-
-# Run with sudo
-
-mount /dev/sdd1 mnt_boot
-rsync -vrlptD --delete sd_boot/ mnt_boot/
-umount mnt_boot
