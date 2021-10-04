@@ -12,10 +12,10 @@ task:
     cpu: 8
   cargo_cache:
     folder: $HOME/.cargo/registry
-    fingerprint_script: cat Cargo.lock
+    fingerprint_script: cat app/Cargo.lock
   install_script:
     - apk update && apk add curl git gcc musl-dev
     - curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain ${RUST_VERSION}
   test_script:
-    - cargo test
+    - cargo test --manifest-path=app/Cargo.toml
   before_cache_script: rm -rf $HOME/.cargo/registry/index
