@@ -3,9 +3,8 @@ use std::time::{Duration, Instant};
 use json::object;
 
 const ALERT_THRESHOLD: Duration = Duration::from_secs(5 * 60); // 5 mins
-const WEBHOOK_URL: &str = env!("GARAGE_WEBHOOK");
 
-pub fn maybe_send(open_since: Instant, notified_at: Option<Instant>) -> Option<Instant> {
+pub fn maybe_send(open_since: Instant, notified_at: Option<Instant>, webhook: &str) -> Option<Instant> {
     let now = Instant::now();
     let open_for = now.duration_since(open_since);
     if open_for > ALERT_THRESHOLD && notified_at.is_none() {
@@ -21,7 +20,7 @@ pub fn maybe_send(open_since: Instant, notified_at: Option<Instant>) -> Option<I
         };
         let mut message = String::from("Garage door has been open for ");
         message.push_str(&open_for_time);
-        if let Err(err) = post_webhook(&message) {
+        if let Err(err) = post_webhook(&message, webhook) {
             eprintln!("Error posting notification: {}", err);
         }
         Some(now)
@@ -30,12 +29,12 @@ pub fn maybe_send(open_since: Instant, notified_at: Option<Instant>) -> Option<I
     }
 }
 
-fn post_webhook(message: &str) -> Result<(), ureq::Error> {
+fn post_webhook(message: &str, webhook: &str) -> Result<(), ureq::Error> {
     let body = object! {
         text: message
     };
 
-    let _resp = ureq::post(WEBHOOK_URL)
+    let _resp = ureq::post(webhook)
         .set("Content-Type", "application/json")
         .send_string(&json::stringify(body))?;
 

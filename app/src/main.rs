@@ -1,7 +1,8 @@
+use io::ErrorKind;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{mpsc, Arc, RwLock};
 use std::time::{Duration, Instant};
-use std::{io, process, thread};
+use std::{env, io, process, thread};
 
 use rppal::gpio::{Gpio, InputPin, OutputPin};
 
@@ -24,6 +25,10 @@ fn main() -> Result<(), io::Error> {
         notified_at: None,
     }));
     let pins = setup_gpio();
+    let webhook_url = env::var("GARAGE_WEBHOOK").map_err(|err| {
+        eprintln!("Unable to read GARAGE_WEBHOOK env var");
+        io::Error::new(ErrorKind::Other, err)
+    })?;
     let mut threads = Vec::new();
 
     // GPIO thread
@@ -101,7 +106,7 @@ fn main() -> Result<(), io::Error> {
                 // sent. Since we clear notified_at when detecting and opening this is ok.
                 let current_state = { *term_on_err!(state.read(), &term) };
                 let maybe_sent = current_state.open_since.and_then(|open_since| {
-                    alert::maybe_send(open_since, current_state.notified_at)
+                    alert::maybe_send(open_since, current_state.notified_at, &webhook_url)
                 });
                 if maybe_sent.is_some() {
                     // notification was sent, update state
