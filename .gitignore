@@ -1,2 +1,3 @@
 /app/target
 /buildroot/overlay/root/current.version
+/buildroot/overlay/etc/wpa_supplicant.conf
