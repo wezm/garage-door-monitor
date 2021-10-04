@@ -1,0 +1,1 @@
+source "$BR2_EXTERNAL_WEZM_PATH/package/garage-door-monitor/Config.in"

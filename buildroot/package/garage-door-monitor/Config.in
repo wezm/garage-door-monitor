@@ -1,0 +1,8 @@
+config BR2_PACKAGE_GARAGE_DOOR_MONITOR
+        bool "garage-door-monitor"
+        depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+        select BR2_PACKAGE_HOST_RUSTC
+        help
+          A small application that monitors the state of my garage door.
+
+          https://github.com/wezm/garage-door-monitor
