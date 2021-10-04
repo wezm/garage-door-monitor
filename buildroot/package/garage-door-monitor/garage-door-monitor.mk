@@ -16,8 +16,7 @@ GARAGE_DOOR_MONITOR_DEPENDENCIES = host-rustc
 # CC_ and AR_ For the ring crate
 GARAGE_DOOR_MONITOR_CARGO_ENV = CARGO_HOME=$(HOST_DIR)/share/cargo \
     CC_$(subst -,_,$(RUSTC_TARGET_NAME))=$(TARGET_CC) \
-    AR_$(subst -,_,$(RUSTC_TARGET_NAME))=$(TARGET_AR) \
-    GARAGE_WEBHOOK=fixme
+    AR_$(subst -,_,$(RUSTC_TARGET_NAME))=$(TARGET_AR)
 
 GARAGE_DOOR_MONITOR_CARGO_OPTS = \
     --target=$(RUSTC_TARGET_NAME) \
