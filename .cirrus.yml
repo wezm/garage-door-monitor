@@ -1,0 +1,21 @@
+env:
+  # Needs to match Buildroot version:
+  # https://git.busybox.net/buildroot/tree/package/rust/rust.mk#n7
+  RUST_VERSION: '1.54.0'
+  RUSTFLAGS: "-C target-feature=-crt-static"
+  PATH: "$HOME/.cargo/bin:$PATH"
+
+task:
+  name: Build (Alpine Linux)
+  container:
+    image: alpine:3.14
+    cpu: 8
+  cargo_cache:
+    folder: $HOME/.cargo/registry
+    fingerprint_script: cat Cargo.lock
+  install_script:
+    - apk update && apk add curl git gcc musl-dev
+    - curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal --default-toolchain ${RUST_VERSION}
+  test_script:
+    - cargo test
+  before_cache_script: rm -rf $HOME/.cargo/registry/index
