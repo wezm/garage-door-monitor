@@ -13,6 +13,40 @@ implemented in [Rust]. The `buildroot` directory contains the [Buildroot]
 configuration for building the Raspberry Pi image. The image is about 30Mb
 and runs entirely from RAM.
 
+## Building
+
+**Note:** These instructions assume a Linux host.
+
+To build the Linux image you will need to download and extract Buildroot as
+well as install [its system requirements][reqs]. I used the [stable 2021.08
+release][buildroot-dl].
+
+In the directory of the extracted Buildroot (E.g. `buildroot-2021.08`) load the
+configuration:
+
+```
+make defconfig BR2_DEFCONFIG=../path/to/garage-door-monitor/buildroot/configs/garage_defconfig
+```
+
+Now point Buildroot at the external tree in this repository and kick of the
+build. This will build the toolchain, kernel, and root file system. Note that
+for subsequent rebuilds you can use `make` without needing to specify
+`BR2_EXTERNAL` as this is remembered:
+
+```
+make BR2_EXTERNAL=../path/to/garage-door-monitor/buildroot
+```
+
+The SD card image is output to: `output/images/sdcard.img`. Write it to an SD
+card with `dd` or similar. Be sure to double check the path to the SD card
+device (`/dev/sdd` in this case):
+
+```
+sudo dd if=output/images/sdcard.img of=/dev/sdd bs=128k
+```
+
 [Buildroot]: https://buildroot.org/
+[buildroot-dl]: https://buildroot.org/downloads/buildroot-2021.08.tar.bz2
 [Mattermost]: https://mattermost.com/
 [Rust]: https://www.rust-lang.org/
+[reqs]: https://buildroot.org/downloads/manual/manual.html#requirement
