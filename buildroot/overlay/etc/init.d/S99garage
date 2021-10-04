@@ -12,7 +12,8 @@ GARAGE_DOOR_MONITOR_ARGS=""
 # line and use "-m" to instruct start-stop-daemon to create one.
 start() {
         printf 'Starting %s: ' "$DAEMON"
-        # shellcheck disable=SC2086 # we need the word splitting
+        export GARAGE_WEBHOOK
+        # shellcheck disable=SC2086 # we need the word splitting for ARGS
         start-stop-daemon -b -m -S -q -p "$PIDFILE" -x "/usr/bin/$DAEMON" \
                 -- -n $GARAGE_DOOR_MONITOR_ARGS
         status=$?
