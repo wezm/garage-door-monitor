@@ -4,7 +4,9 @@ use std::sync::{mpsc, Arc, RwLock};
 use std::time::{Duration, Instant};
 use std::{env, io, process, thread};
 
+use log::{error, info, LevelFilter};
 use rppal::gpio::{Gpio, InputPin, OutputPin};
+use syslog::BasicLogger;
 
 use garage_door_monitor::{alert, http, led, term_on_err, DoorState, State};
 
@@ -14,6 +16,24 @@ const ONE_SECOND: Duration = Duration::from_secs(1);
 const SERVER_ADDR: (&str, u16) = ("0.0.0.0", 8888);
 
 fn main() -> Result<(), io::Error> {
+    // Set up logging to syslog
+    let formatter = syslog::Formatter3164 {
+        facility: syslog::Facility::LOG_USER,
+        hostname: None,
+        process: env!("CARGO_PKG_NAME").into(),
+        pid: 0,
+    };
+    let log_res = syslog::unix(formatter)
+        .map_err(|err| format!("unable to connect to syslog: {:?}", err))
+        .and_then(|logger| {
+            log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
+                .map(|()| log::set_max_level(LevelFilter::Info))
+                .map_err(|err| format!("unable to set logger: {:?}", err))
+        });
+    if let Err(err) = log_res {
+        eprintln!("{}", err);
+    }
+
     let term = Arc::new(AtomicBool::new(false));
     signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&term))?;
     signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term))?;
@@ -26,7 +46,7 @@ fn main() -> Result<(), io::Error> {
     }));
     let pins = setup_gpio();
     let webhook_url = env::var("GARAGE_WEBHOOK").map_err(|err| {
-        eprintln!("Unable to read GARAGE_WEBHOOK env var");
+        error!("Unable to read GARAGE_WEBHOOK: {}", err);
         io::Error::new(ErrorKind::Other, err)
     })?;
     let mut threads = Vec::new();
@@ -49,12 +69,12 @@ fn main() -> Result<(), io::Error> {
                     }
                     std::thread::sleep(ONE_SECOND);
                 }
-                eprintln!("GPIO thread exiting");
+                info!("GPIO thread exiting");
             });
             threads.push(thread);
         }
         Err(err) => {
-            eprintln!("Unable to set up GPIO: {}", err)
+            error!("Unable to set up GPIO: {}", err)
         }
     }
 
@@ -89,7 +109,7 @@ fn main() -> Result<(), io::Error> {
                     }
                 }
             }
-            eprintln!("state management thread exiting");
+            info!("state management thread exiting");
         });
         threads.push(thread);
     }
@@ -116,7 +136,7 @@ fn main() -> Result<(), io::Error> {
 
                 std::thread::sleep(5 * ONE_SECOND);
             }
-            eprintln!("notification thread exiting");
+            info!("notification thread exiting");
         });
         threads.push(thread);
     }
@@ -125,14 +145,14 @@ fn main() -> Result<(), io::Error> {
     let server = match http::Server::new(SERVER_ADDR) {
         Ok(server) => Arc::new(server),
         Err(err) => {
-            eprintln!(
+            error!(
                 "Unable to start http server on {}:{}: {}",
                 SERVER_ADDR.0, SERVER_ADDR.1, err
             );
             process::exit(1);
         }
     };
-    eprintln!("http server running on {}:{}", SERVER_ADDR.0, SERVER_ADDR.1);
+    info!("http server running on {}:{}", SERVER_ADDR.0, SERVER_ADDR.1);
 
     // Handle HTTP requests
     {
@@ -140,7 +160,7 @@ fn main() -> Result<(), io::Error> {
         let server = Arc::clone(&server);
         let thread = thread::spawn(move || {
             server.handle_requests(state);
-            eprintln!("server thread exiting");
+            info!("server thread exiting");
         });
         threads.push(thread);
     }

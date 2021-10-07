@@ -4,7 +4,11 @@ use json::object;
 
 const ALERT_THRESHOLD: Duration = Duration::from_secs(5 * 60); // 5 mins
 
-pub fn maybe_send(open_since: Instant, notified_at: Option<Instant>, webhook: &str) -> Option<Instant> {
+pub fn maybe_send(
+    open_since: Instant,
+    notified_at: Option<Instant>,
+    webhook: &str,
+) -> Option<Instant> {
     let now = Instant::now();
     let open_for = now.duration_since(open_since);
     if open_for > ALERT_THRESHOLD && notified_at.is_none() {
