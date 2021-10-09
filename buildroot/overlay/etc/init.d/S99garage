@@ -3,8 +3,6 @@
 DAEMON="garage-door-monitor"
 PIDFILE="/var/run/$DAEMON.pid"
 
-GARAGE_DOOR_MONITOR_ARGS=""
-
 # shellcheck source=/dev/null
 [ -r "/etc/default/$DAEMON" ] && . "/etc/default/$DAEMON"
 
@@ -12,10 +10,9 @@ GARAGE_DOOR_MONITOR_ARGS=""
 # line and use "-m" to instruct start-stop-daemon to create one.
 start() {
         printf 'Starting %s: ' "$DAEMON"
-        export GARAGE_WEBHOOK
-        # shellcheck disable=SC2086 # we need the word splitting for ARGS
-        start-stop-daemon -b -m -S -q -p "$PIDFILE" -x "/usr/bin/$DAEMON" \
-                -- -n $GARAGE_DOOR_MONITOR_ARGS
+        daemon --name "$DAEMON" --env "GARAGE_WEBHOOK=$GARAGE_WEBHOOK" \
+               --pidfile "$PIDFILE" --respawn --delay 10 \
+               --output "/var/log/$DAEMON.err" --command "/usr/bin/$DAEMON"
         status=$?
         if [ "$status" -eq 0 ]; then
                 echo "OK"
@@ -27,7 +24,7 @@ start() {
 
 stop() {
         printf 'Stopping %s: ' "$DAEMON"
-        start-stop-daemon -K -q -p "$PIDFILE"
+        daemon --name "$DAEMON" --stop --pidfile "$PIDFILE"
         status=$?
         if [ "$status" -eq 0 ]; then
                 rm -f "$PIDFILE"
@@ -39,9 +36,8 @@ stop() {
 }
 
 restart() {
-        stop
-        sleep 1
-        start
+        printf 'Restarting %s: ' "$DAEMON"
+        daemon --name "$DAEMON" --restart --pidfile "$PIDFILE"
 }
 
 case "$1" in
