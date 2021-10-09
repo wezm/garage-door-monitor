@@ -21,6 +21,19 @@ To build the Linux image you will need to download and extract Buildroot as
 well as install [its system requirements][reqs]. I used the [stable 2021.08
 release][buildroot-dl].
 
+Clone the repo then populate two configuration files:
+
+* `buildroot/overlay/etc/default/garage-door-monitor` — Web-hook URL. E.g.
+
+      GARAGE_WEBHOOK="https://example.com/"
+
+* `buildroot/overlay/etc/wpa_supplicant.conf` — Wi-Fi configuration. E.g.
+
+      network={
+          ssid="NetworkName"
+          psk="password"
+      }
+
 In the directory of the extracted Buildroot (E.g. `buildroot-2021.08`) load the
 configuration:
 

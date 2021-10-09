@@ -1,3 +1,5 @@
 /app/target
 /buildroot/overlay/root/current.version
 /buildroot/overlay/etc/wpa_supplicant.conf
+/buildroot/overlay/etc/default/garage-door-monitor
+*.bak
