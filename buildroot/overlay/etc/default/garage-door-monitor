@@ -1,5 +1,0 @@
-# defaults for garage-door-monitor
-# sourced by /etc/init.d/garage-door-monitor
-
-# Mattermoset webhook URL that alerts will be sent to
-GARAGE_WEBHOOK="https://example.com/"
