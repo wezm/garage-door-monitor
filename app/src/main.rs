@@ -56,11 +56,10 @@ fn main() -> Result<(), io::Error> {
     // If running as root drop privs to garage user.
     // We need root setup_gpio so this is done after that.
     if unsafe { libc::geteuid() } == 0 {
-        info!("Dropping privileges to {} user", USER);
         match drop_root::set_user_group(USER, GROUP) {
             Ok(()) => info!("Privileges dropped"),
             Err(err) => {
-                error!("unable to drop root privileges: {}", err);
+                error!("Unable to drop root privileges: {}", err);
                 std::process::exit(1);
             }
         }
