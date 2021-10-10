@@ -6,7 +6,9 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+drop-root = "0.1.1"
 json = "0.12.4"
+libc = "0.2"
 log = "0.4.14"
 rppal = "0.12.0"
 syslog = "5.0"

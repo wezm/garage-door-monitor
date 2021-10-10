@@ -42,4 +42,8 @@ define GARAGE_DOOR_MONITOR_INSTALL_TARGET_CMDS
             $(TARGET_DIR)/usr/bin/garage-door-monitor
 endef
 
+define GARAGE_DOOR_MONITOR_USERS
+        _garage -1 _garage -1 * - - - Garage Door Monitor daemon
+endef
+
 $(eval $(generic-package))

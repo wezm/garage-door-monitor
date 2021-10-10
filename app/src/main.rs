@@ -14,6 +14,8 @@ const DOOR_PIN: u8 = 20; // header pin 38
 const LED_PIN: u8 = 21; // header pin 40
 const ONE_SECOND: Duration = Duration::from_secs(1);
 const SERVER_ADDR: (&str, u16) = ("0.0.0.0", 8888);
+const USER: &str = "_garage";
+const GROUP: &str = "_garage";
 
 fn main() -> Result<(), io::Error> {
     // Set up logging to syslog
@@ -37,6 +39,18 @@ fn main() -> Result<(), io::Error> {
     let term = Arc::new(AtomicBool::new(false));
     signal_hook::flag::register(signal_hook::consts::SIGINT, Arc::clone(&term))?;
     signal_hook::flag::register(signal_hook::consts::SIGTERM, Arc::clone(&term))?;
+
+    // If running as root drop privs to garage user
+    if unsafe { libc::geteuid() } == 0 {
+        info!("Dropping prvileges to {} user", USER);
+        match drop_root::set_user_group(USER, GROUP) {
+            Ok(()) => info!("Privileges dropped"),
+            Err(err) => {
+                error!("unable to drop root privileges: {}", err);
+                std::process::exit(1);
+            }
+        }
+    }
 
     let (tx, rx) = mpsc::channel();
     let state = Arc::new(RwLock::new(State {
