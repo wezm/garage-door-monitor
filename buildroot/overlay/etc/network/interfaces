@@ -4,7 +4,7 @@ iface lo inet loopback
 auto wlan0
 iface wlan0 inet static
   pre-up wpa_supplicant -D nl80211 -i wlan0 -c /etc/wpa_supplicant.conf -B
-  post-up rsdate -s pool.ntp.org
+  post-up rsdate -s -l pool.ntp.org
   post-down killall -q wpa_supplicant
   wait-delay 15
   address 10.0.0.11
