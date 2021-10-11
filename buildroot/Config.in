@@ -1,1 +1,2 @@
 source "$BR2_EXTERNAL_WEZM_PATH/package/garage-door-monitor/Config.in"
+source "$BR2_EXTERNAL_WEZM_PATH/package/rsdate/Config.in"

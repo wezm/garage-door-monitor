@@ -1,0 +1,8 @@
+config BR2_PACKAGE_RSDATE
+        bool "rsdate"
+        depends on BR2_PACKAGE_HOST_RUSTC_TARGET_ARCH_SUPPORTS
+        select BR2_PACKAGE_HOST_RUSTC
+        help
+          Set or print the time from an ntp server.
+
+          https://github.com/wezm/rsdate
