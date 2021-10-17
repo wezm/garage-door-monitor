@@ -1,0 +1,1 @@
+RSDATE_ARGS="-s -l -r 5 pool.ntp.org"
