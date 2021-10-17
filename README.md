@@ -10,8 +10,19 @@ minimal custom Linux installation running on a Raspberry Pi Zero W.
 
 The binary that monitors the garage door is in the `app` directory. It is
 implemented in [Rust]. The `buildroot` directory contains the [Buildroot]
-configuration for building the Raspberry Pi image. The image is about 30Mb
-and runs entirely from RAM.
+configuration for building the Raspberry Pi image.
+
+The system image, which includes the [kernel], [busybox], [openntp], [rsdate],
+[wpa_supplicant], and the monitoring application itself is about 12Mb. It is
+stored on a 256Mb micro SD card, which is the smallest I could get my hands on.
+The system boots and is fully operational in less than 5 seconds and runs
+entirely from RAM (the microSD card is not event mounted).
+
+[kernel]: https://www.kernel.org/
+[busybox]: https://www.busybox.net/
+[openntp]: https://www.openntpd.org/
+[rsdate]: https://github.com/wezm/rsdate
+[wpa_supplicant]: https://hostap.epitest.fi/wpa_supplicant/
 
 ## Building
 
