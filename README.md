@@ -16,7 +16,7 @@ The system image, which includes the [kernel], [busybox], [openntp], [rsdate],
 [wpa_supplicant], and the monitoring application itself is about 12Mb. It is
 stored on a 256Mb micro SD card, which is the smallest I could get my hands on.
 The system boots and is fully operational in less than 5 seconds and runs
-entirely from RAM (the microSD card is not event mounted).
+entirely from RAM (the microSD card is not even mounted).
 
 [kernel]: https://www.kernel.org/
 [busybox]: https://www.busybox.net/
@@ -68,6 +68,12 @@ device (`/dev/sdd` in this case):
 ```
 sudo dd if=output/images/sdcard.img of=/dev/sdd bs=128k
 ```
+
+## Wiring
+
+* A reed switch is connected between 3.3V and header pin 38 via a 10kΩ resistor. Internal pull-downs are enabled on the pin.
+* The anode of a 3mm LED is connected to header pin 40 via a 220Ω resistor.
+* The Pi is powered through header pins 4 (5V) and 6 (GND).
 
 [Buildroot]: https://buildroot.org/
 [buildroot-dl]: https://buildroot.org/downloads/buildroot-2021.08.tar.bz2
