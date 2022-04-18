@@ -10,12 +10,14 @@ minimal custom Linux installation running on a Raspberry Pi Zero W.
 
 The binary that monitors the garage door is in the `app` directory. It is
 implemented in [Rust]. The `buildroot` directory contains the [Buildroot]
-configuration for building the Raspberry Pi image.
+configuration for building the Raspberry Pi image. The `hardware` directory
+contains a wiring diagram and 3D model for a spacer I 3D printed to mount
+the reed switch to.
 
 The system image, which includes the [kernel], [busybox], [openntp], [rsdate],
-[wpa_supplicant], and the monitoring application itself is about 12Mb. It is
+[wpa_supplicant], and the monitoring application itself is about 13Mb. It is
 stored on a 256Mb micro SD card, which is the smallest I could get my hands on.
-The system boots and is fully operational in less than 5 seconds and runs
+The system boots and is interactive in less than 5 seconds and runs
 entirely from RAM (the microSD card is not even mounted).
 
 [kernel]: https://www.kernel.org/
@@ -52,7 +54,7 @@ configuration:
 make defconfig BR2_DEFCONFIG=../path/to/garage-door-monitor/buildroot/configs/garage_defconfig
 ```
 
-Now point Buildroot at the external tree in this repository and kick of the
+Now point Buildroot at the external tree in this repository and kick off the
 build. This will build the toolchain, kernel, and root file system. Note that
 for subsequent rebuilds you can use `make` without needing to specify
 `BR2_EXTERNAL` as this is remembered:
@@ -74,6 +76,8 @@ sudo dd if=output/images/sdcard.img of=/dev/sdd bs=128k
 * A reed switch is connected between 3.3V and header pin 38 via a 10kΩ resistor. Internal pull-downs are enabled on the pin.
 * The anode of a 3mm LED is connected to header pin 40 via a 220Ω resistor.
 * The Pi is powered through header pins 4 (5V) and 6 (GND).
+
+See also the Fritzing wiring diagram in `hardware`.
 
 [Buildroot]: https://buildroot.org/
 [buildroot-dl]: https://buildroot.org/downloads/buildroot-2021.08.tar.bz2
