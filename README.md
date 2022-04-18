@@ -1,4 +1,5 @@
-# Garage Door Monitor
+Garage Door Monitor
+===================
 
 [![Build Status](https://api.cirrus-ci.com/github/wezm/garage-door-monitor.svg)](https://cirrus-ci.com/github/wezm/garage-door-monitor)
 
@@ -26,7 +27,8 @@ entirely from RAM (the microSD card is not even mounted).
 [rsdate]: https://github.com/wezm/rsdate
 [wpa_supplicant]: https://hostap.epitest.fi/wpa_supplicant/
 
-## Building
+Building
+--------
 
 **Note:** These instructions assume a Linux host.
 
@@ -71,13 +73,24 @@ device (`/dev/sdd` in this case):
 sudo dd if=output/images/sdcard.img of=/dev/sdd bs=128k
 ```
 
-## Wiring
+Wiring
+------
 
 * A reed switch is connected between 3.3V and header pin 38 via a 10kΩ resistor. Internal pull-downs are enabled on the pin.
 * The anode of a 3mm LED is connected to header pin 40 via a 220Ω resistor.
 * The Pi is powered through header pins 4 (5V) and 6 (GND).
 
 See also the Fritzing wiring diagram in `hardware`.
+
+Licence
+-------
+
+This project is dual licenced under either of:
+
+- Apache License, Version 2.0 ([LICENSE-APACHE](https://github.com/wezm/garage-door-monitor/blob/master/LICENSE-APACHE))
+- MIT license ([LICENSE-MIT](https://github.com/wezm/garage-door-monitor/blob/master/LICENSE-MIT))
+
+at your option.
 
 [Buildroot]: https://buildroot.org/
 [buildroot-dl]: https://buildroot.org/downloads/buildroot-2021.08.tar.bz2
