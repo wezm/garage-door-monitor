@@ -2,6 +2,7 @@ pub mod alert;
 mod door_state;
 pub mod http;
 pub mod led;
+mod uptime;
 
 use std::time::Instant;
 

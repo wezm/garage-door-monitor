@@ -5,8 +5,10 @@ use std::sync::{Arc, RwLock};
 use std::time::Instant;
 
 use json::object;
+use systemstat::{ByteSize, Platform, System};
 use tiny_http::Response;
 
+use crate::uptime::Uptime;
 use crate::{DoorState, State};
 
 const HTML: &str = include_str!("home.html");
@@ -62,6 +64,26 @@ impl Server {
                         DoorState::Unknown => String::from("🔵 Unknown"),
                     };
                     let html = HTML.replace("$doorstate$", &status);
+
+                    // Fetch system info
+                    let system = System::new();
+                    let uptime = system
+                        .uptime()
+                        .ok()
+                        .map(|uptime| Uptime::new(uptime.as_secs()))
+                        .unwrap_or_default();
+                    let html = html.replace("$uptime$", &uptime.to_string());
+
+                    let memory = system
+                        .memory()
+                        .map(|mem| {
+                            let used =
+                                ByteSize(mem.total.as_u64().saturating_sub(mem.free.as_u64()));
+                            format!("{} used {} free {} total", used, mem.free, mem.total)
+                        })
+                        .unwrap_or_else(|_| String::from("unknown"));
+                    let html = html.replace("$memory$", &memory);
+
                     Response::from_string(html).with_header(html_content.clone())
                 }
                 "/door.json" => {
