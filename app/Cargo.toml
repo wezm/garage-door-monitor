@@ -17,6 +17,9 @@ timeago = { version = "0.3.1", default-features = false }
 tiny_http = "0.12"
 ureq = "2.5"
 systemstat = "0.2.1"
+# Used by systemstat and syslog
+# 0.3.14 requires rust 1.59.0 and we're building with 1.58.1
+time = { version = "0.3,<0.3.14" }
 
 [profile.release]
 panic = "abort"
