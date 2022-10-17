@@ -12,14 +12,15 @@ libc = "0.2"
 log = "0.4.17"
 rppal = "0.13.1"
 syslog = "6.0"
+systemstat = "0.2.1"
 signal-hook = "0.3.14"
 timeago = { version = "0.3.1", default-features = false }
 tiny_http = "0.12"
 ureq = "2.5"
-systemstat = "0.2.1"
-# Used by systemstat and syslog
-# 0.3.14 requires rust 1.59.0 and we're building with 1.58.1
-time = { version = "0.3,<0.3.14" }
+
+# Transient deps being held back for compatibility with older Rust
+time = { version = "=0.3.9" }
+once_cell = { version = "=1.14.0" }
 
 [profile.release]
 panic = "abort"
