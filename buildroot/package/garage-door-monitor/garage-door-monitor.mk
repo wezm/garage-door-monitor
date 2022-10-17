@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-GARAGE_DOOR_MONITOR_VERSION = 0.4.1
+GARAGE_DOOR_MONITOR_VERSION = 0.5.0
 # GARAGE_DOOR_MONITOR_SOURCE = garage-door-monitor-$(GARAGE_DOOR_MONITOR_VERSION).tar.gz
 # https://github.com/wezm/garage-door-monitor/archive/refs/tags/v0.1.0.tar.gz
 GARAGE_DOOR_MONITOR_SITE = $(call github,wezm,garage-door-monitor,v$(GARAGE_DOOR_MONITOR_VERSION))
