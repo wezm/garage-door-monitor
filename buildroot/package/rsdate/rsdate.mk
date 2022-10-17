@@ -4,7 +4,7 @@
 #
 ################################################################################
 
-RSDATE_VERSION = 0.5.0
+RSDATE_VERSION = 0.4.0
 # RSDATE_SOURCE = rsdate-$(RSDATE_VERSION).tar.gz
 # https://github.com/wezm/rsdate/archive/refs/tags/0.1.0.tar.gz
 RSDATE_SITE = $(call github,wezm,rsdate,$(RSDATE_VERSION))
