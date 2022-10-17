@@ -8,7 +8,7 @@ use log::{error, info, LevelFilter};
 use rppal::gpio::{Gpio, InputPin, OutputPin};
 use syslog::BasicLogger;
 
-use garage_door_monitor::{alert, http, led, term_on_err, DoorState, State};
+use garage_door_monitor::{alert, http, led, term_on_err, DoorState, State, Timestamp};
 
 const DOOR_PIN: u8 = 20; // header pin 38
 const LED_PIN: u8 = 21; // header pin 40
@@ -43,7 +43,7 @@ fn main() -> Result<(), io::Error> {
     let (tx, rx) = mpsc::channel();
     let state = Arc::new(RwLock::new(State {
         door_state: DoorState::Unknown,
-        open_since: None,
+        timestamp: Timestamp::None,
         notified_at: None,
     }));
     let pins = setup_gpio();
@@ -100,19 +100,23 @@ fn main() -> Result<(), io::Error> {
             while !term.load(Ordering::Relaxed) {
                 if let Ok(door_state) = rx.recv_timeout(ONE_SECOND) {
                     let current_state = { *term_on_err!(state.read(), &term) };
-                    let new_state = match (door_state, current_state.open_since) {
+                    let new_state = match (door_state, current_state.timestamp) {
                         // Closed to open transition
-                        (DoorState::Open, None) => State {
+                        (DoorState::Open, Timestamp::None | Timestamp::ClosedAfter(_)) => State {
                             door_state,
-                            open_since: Some(Instant::now()),
+                            timestamp: Timestamp::OpenSince(Instant::now()),
                             notified_at: None,
                         },
                         // Open to closed transition
-                        (DoorState::Closed, Some(_)) => State {
-                            door_state,
-                            open_since: None,
-                            notified_at: None,
-                        },
+                        (DoorState::Closed, Timestamp::OpenSince(open_since)) => {
+                            let now = Instant::now();
+                            let open_for = now.duration_since(open_since);
+                            State {
+                                door_state,
+                                timestamp: Timestamp::ClosedAfter(open_for),
+                                notified_at: None,
+                            }
+                        }
                         _ => State {
                             door_state,
                             ..current_state
@@ -139,16 +143,18 @@ fn main() -> Result<(), io::Error> {
                 // read-modify-write case if the state is updated while the notification is
                 // sent. Since we clear notified_at when detecting and opening this is ok.
                 let current_state = { *term_on_err!(state.read(), &term) };
-                let maybe_sent = current_state.open_since.and_then(|open_since| {
-                    alert::maybe_send(open_since, current_state.notified_at, &webhook_url)
-                });
+                let maybe_sent = alert::maybe_send(
+                    current_state.timestamp,
+                    current_state.notified_at,
+                    &webhook_url,
+                );
                 if maybe_sent.is_some() {
                     // notification was sent, update state
                     let mut current_state = term_on_err!(state.write(), &term);
                     current_state.notified_at = maybe_sent
                 }
 
-                std::thread::sleep(5 * ONE_SECOND);
+                thread::sleep(5 * ONE_SECOND);
             }
             info!("notification thread exiting");
         });

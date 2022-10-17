@@ -9,7 +9,7 @@ use systemstat::{ByteSize, Platform, System};
 use tiny_http::Response;
 
 use crate::uptime::Uptime;
-use crate::{DoorState, State};
+use crate::{DoorState, State, Timestamp};
 
 const HTML: &str = include_str!("home.html");
 
@@ -49,15 +49,15 @@ impl Server {
                     let current_state = check_read!(state.read());
                     let status = match current_state.door_state {
                         DoorState::Open => {
-                            let duration = current_state
-                                .open_since
-                                .map(|opened| {
+                            let duration = match current_state.timestamp {
+                                Timestamp::OpenSince(opened) => {
                                     let now = Instant::now();
                                     let duration = now.duration_since(opened);
                                     let formatter = timeago::Formatter::new();
                                     Cow::from(formatter.convert(duration))
-                                })
-                                .unwrap_or_else(|| Cow::from("at an unknown time"));
+                                }
+                                _ => Cow::from("at an unknown time"),
+                            };
                             String::from(format!("🔴 Opened {}", duration))
                         }
                         DoorState::Closed => String::from("🟢 Closed"),
@@ -92,7 +92,10 @@ impl Server {
                     let obj = object! {
                         state: current_state.door_state.to_string(),
                         secs_since_notified: current_state.notified_at.map(|notified| now.duration_since(notified).as_secs()),
-                        open_for: current_state.open_since.map(|opened| now.duration_since(opened).as_secs())
+                        open_for: match current_state.timestamp {
+                            Timestamp::OpenSince(opened) => Some(now.duration_since(opened).as_secs()),
+                            _ => None,
+                        }
                     };
                     let body = json::stringify_pretty(obj, 2);
                     Response::from_string(body).with_header(json.clone())
